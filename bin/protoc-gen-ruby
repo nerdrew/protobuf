@@ -10,7 +10,23 @@ require 'protobuf'
 require 'protobuf/descriptors'
 require 'protobuf/code_generator'
 
-request_bytes = STDIN.read
+if ENV['PB_LOAD_REQUEST_BYTES']
+  request_bytes = File.read(ENV['PB_LOAD_REQUEST_BYTES'])
+else
+  request_bytes = STDIN.read
+end
+if ENV['PB_DUMP_REQUEST_BYTES']
+  dump_file = ENV['PB_DUMP_REQUEST_BYTES']
+  unless File.directory?(File.dirname(dump_file))
+    warn "PB_DUMP_REQUEST_BYTES=#{dump_file.inspect} is not a valid path for the request bytes"
+    warn "Usage: PB_DUMP_REQUEST_BYTES=/path/to/desired/dump/file.bin protoc blah.proto"
+    exit 1
+  end
+  File.open(dump_file, 'w') do |f|
+    f.print(request_bytes)
+  end
+  exit 1
+end
 code_generator = ::Protobuf::CodeGenerator.new(request_bytes)
 response_bytes = code_generator.response_bytes
 STDOUT.print(response_bytes)
