@@ -1,3 +1,5 @@
+require "set"
+
 module Protobuf
   class Message
     module Fields
@@ -92,20 +94,42 @@ module Protobuf
           end
         end
 
+        def extension_shortcuts
+          @extension_shortcuts ||= Set.new
+        end
+
         def define_field(rule, type_class, field_name, tag, options)
           raise_if_tag_collision(tag, field_name)
           raise_if_name_collision(field_name)
 
-          field = ::Protobuf::Field.build(self, rule, type_class, field_name, tag, options)
+          if options[:extension]
+            base_name = field_name.to_s.split('.').last
+            if field_store[base_name] # there is a regular field
+              simple_name = nil
+            elsif extension_shortcuts.include?(base_name)
+              remove_existing_accessors(base_name)
+              simple_name = nil
+            else
+              extension_shortcuts << base_name
+              simple_name = base_name
+            end
+          else
+            simple_name = field_name
+          end
+
+          field = ::Protobuf::Field.build(self, rule, type_class, field_name, tag, simple_name, options)
           field_store[tag] = field
           field_store[field_name] = field
           field_store[field_name.to_s] = field
           # defining a new field for the message will cause cached @all_fields, @extension_fields,
           # and @fields to be incorrect; reset them
           @all_fields = @extension_fields = @fields = nil
+        end
 
-          define_method("#{field_name}!") do
-            @values[field_name]
+        def remove_existing_accessors(accessor)
+          ["", "=", "!", "?"].each do |modifier|
+            method = "#{accessor}#{modifier}".to_sym
+            remove_method(method) if instance_methods(false).include?(method)
           end
         end
 
