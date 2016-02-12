@@ -7,6 +7,13 @@ require 'protobuf/message'
 
 module Google
   module Protobuf
+    ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
+    set_option :java_package, "com.google.protobuf"
+    set_option :java_outer_classname, "DescriptorProtos"
+    set_option :go_package, "descriptor"
+    set_option :objc_class_prefix, "GPB"
+    set_option :csharp_namespace, "Google.Protobuf.Reflection"
+
 
     ##
     # Message Classes
@@ -93,6 +100,11 @@ module Google
 
     end
 
+    class GeneratedCodeInfo < ::Protobuf::Message
+      class Annotation < ::Protobuf::Message; end
+
+    end
+
 
 
     ##
@@ -149,6 +161,7 @@ module Google
       optional :string, :extendee, 2
       optional :string, :default_value, 7
       optional :int32, :oneof_index, 9
+      optional :string, :json_name, 10
       optional ::Google::Protobuf::FieldOptions, :options, 8
     end
 
@@ -198,7 +211,7 @@ module Google
       optional :bool, :cc_enable_arenas, 31, :default => false
       optional :string, :objc_class_prefix, 36
       optional :string, :csharp_namespace, 37
-      optional :bool, :javanano_use_deprecated_package, 38
+      optional :bool, :javanano_use_deprecated_package, 38, :deprecated => true
       repeated ::Google::Protobuf::UninterpretedOption, :uninterpreted_option, 999
       # Extension Fields
       extensions 1000...536870912
@@ -280,6 +293,17 @@ module Google
       end
 
       repeated ::Google::Protobuf::SourceCodeInfo::Location, :location, 1
+    end
+
+    class GeneratedCodeInfo
+      class Annotation
+        repeated :int32, :path, 1, :packed => true
+        optional :string, :source_file, 2
+        optional :int32, :begin, 3
+        optional :int32, :end, 4
+      end
+
+      repeated ::Google::Protobuf::GeneratedCodeInfo::Annotation, :annotation, 1
     end
 
   end

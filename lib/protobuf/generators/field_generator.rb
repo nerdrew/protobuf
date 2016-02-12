@@ -84,6 +84,14 @@ module Protobuf
                              opts[:packed] = 'true' if packed?
                              opts[:deprecated] = 'true' if deprecated?
                              opts[:extension] = 'true' if extension?
+                             if descriptor.options
+                               descriptor.options.each_field do |field_option|
+                                 next unless field_option.extension?
+                                 default_option_value = descriptor.options[field_option.name]
+                                 next if default_option_value == field_option.default_value
+                                 opts[field_option.name] = serialize_value(default_option_value)
+                               end
+                             end
                              opts
                            end
       end

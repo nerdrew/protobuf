@@ -28,5 +28,5 @@ if ENV['PB_DUMP_REQUEST_BYTES']
   exit 1
 end
 code_generator = ::Protobuf::CodeGenerator.new(request_bytes)
-response_bytes = code_generator.response_bytes
-STDOUT.print(response_bytes)
+code_generator.eval_unknown_extensions!
+STDOUT.print(code_generator.response_bytes)

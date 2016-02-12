@@ -13,6 +13,13 @@ require 'protobuf/rpc/service'
 require 'protos/google_unittest_import.pb'
 
 module Protobuf_unittest
+  ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
+  set_option :java_outer_classname, "UnittestProto"
+  set_option :cc_generic_services, true
+  set_option :java_generic_services, true
+  set_option :py_generic_services, true
+  set_option :cc_enable_arenas, true
+
 
   ##
   # Enum Classes
@@ -24,7 +31,7 @@ module Protobuf_unittest
   end
 
   class TestEnumWithDupValue < ::Protobuf::Enum
-    set_option :allow_alias
+    set_option :allow_alias, true
 
     define :FOO1, 1
     define :BAR1, 2

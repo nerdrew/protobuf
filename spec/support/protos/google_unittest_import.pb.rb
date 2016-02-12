@@ -12,6 +12,10 @@ require 'protobuf/message'
 require 'protos/google_unittest_import_public.pb'
 
 module Protobuf_unittest_import
+  ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
+  set_option :java_package, "com.google.protobuf.test"
+  set_option :cc_enable_arenas, true
+
 
   ##
   # Enum Classes
