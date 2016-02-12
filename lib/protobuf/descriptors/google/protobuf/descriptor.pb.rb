@@ -7,6 +7,14 @@ require 'protobuf/message'
 
 module Google
   module Protobuf
+    ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
+    set_option :java_package, "com.google.protobuf"
+    set_option :java_outer_classname, "DescriptorProtos"
+    set_option :go_package, "descriptor"
+    set_option :objc_class_prefix, "GPB"
+    set_option :csharp_namespace, "Google.Protobuf.Reflection"
+    set_option :javanano_use_deprecated_package, true
+
 
     ##
     # Message Classes

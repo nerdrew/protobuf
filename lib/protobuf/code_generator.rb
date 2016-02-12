@@ -1,4 +1,6 @@
 require 'protobuf/generators/file_generator'
+require 'active_support/core_ext/string/inflections'
+require 'pry'
 
 module Protobuf
   class CodeGenerator
@@ -25,7 +27,15 @@ module Protobuf
     public
 
     def initialize(request_bytes)
+      @request_bytes = request_bytes
       self.request = ::Google::Protobuf::Compiler::CodeGeneratorRequest.decode(request_bytes)
+    end
+
+    def eval_unknown_extensions!
+      request.proto_file.each do |file_descriptor|
+        ::Protobuf::Generators::FileGenerator.new(file_descriptor).eval_unknown_extensions!
+      end
+      self.request = ::Google::Protobuf::Compiler::CodeGeneratorRequest.decode(@request_bytes)
     end
 
     def generate_file(file_descriptor)

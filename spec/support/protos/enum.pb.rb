@@ -12,6 +12,7 @@ require 'protobuf/message'
 require 'protos/resource.pb'
 
 module Test
+  ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
   ##
   # Enum Classes
@@ -22,7 +23,7 @@ module Test
   end
 
   class AliasedEnum < ::Protobuf::Enum
-    set_option :allow_alias
+    set_option :allow_alias, true
 
     define :THREE, 3
     define :TRES, 3
@@ -54,7 +55,7 @@ module Test
   # Extended Message Fields
   #
   class ::Test::Resource < ::Protobuf::Message
-    optional :int32, :ext_other_file_defined_field, 200, :extension => true
+    optional :int32, :".test.ext_other_file_defined_field", 200, :extension => true
   end
 
 end

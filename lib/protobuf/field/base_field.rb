@@ -7,6 +7,7 @@ module Protobuf
   module Field
     class BaseField
       include ::Protobuf::Logging
+      ::Protobuf::Optionable.inject(self, false) { ::Google::Protobuf::FieldOptions }
 
       ##
       # Constants
@@ -41,7 +42,11 @@ module Protobuf
         @rule          = rule
         @tag           = tag
         @type_class    = type_class
+        # TODO cleanup @options vs set_option
         @options       = options
+        options.each do |option_name, value|
+          set_option(option_name, value)
+        end
 
         validate_packed_field if packed?
         define_accessor(simple_name, name) if simple_name

@@ -2,6 +2,7 @@ require 'protobuf/generators/enum_generator'
 require 'protobuf/generators/extension_generator'
 require 'protobuf/generators/field_generator'
 require 'protobuf/generators/message_generator'
+require 'protobuf/generators/option_generator'
 require 'protobuf/generators/service_generator'
 
 module Protobuf
@@ -18,8 +19,12 @@ module Protobuf
         @comments = {}
         @handlers = {}
         @indent_level = indent_level
-        @order = [:enum, :message_declaration, :message, :extended_message, :service]
+        @order = [:options, :enum, :message_declaration, :message, :extended_message, :service]
         init_printer(indent_level)
+      end
+
+      def add_options(option_descriptor)
+        @groups[:options] << OptionGenerator.new(option_descriptor, indent_level)
       end
 
       def add_enums(enum_descriptors, options)
@@ -98,7 +103,7 @@ module Protobuf
             end
           end
 
-          puts if type == :message_declaration
+          puts if type == :message_declaration || type == :options
         end
       end
 
