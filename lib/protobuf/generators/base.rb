@@ -65,6 +65,25 @@ module Protobuf
         @type_namespace ||= @namespace + [descriptor.name]
       end
 
+      # TODO(lazarus): this needs a test
+      def serialize_value(value)
+        if value.is_a?(Message)
+          fields = value.each_field.map do |field, inner_value|
+            next if field.default_value == inner_value
+            serialized_inner_value = serialize_value(inner_value)
+            # TODO: handle "empty" serialized_inner_value
+            "#{field.name.inspect} => #{serialized_inner_value}"
+          end.compact
+          "{ #{fields.join(', ')} }"
+        elsif value.is_a?(Enum)
+          "::#{value.parent_class}::#{value.name}"
+        elsif value.is_a?(String)
+          "\"#{value}\""
+        else
+          value
+        end
+      end
+
     end
   end
 end

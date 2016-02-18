@@ -82,5 +82,21 @@ RSpec.describe ::Protobuf::Generators::Base do
       end
     end
   end
+    
+  describe '#serialize_value' do
+    let(:enum) { ::Protobuf::Enum.new("ParentClass", "EnumName", 1)}
+    
+    it 'serializes Enums' do
+      expect(subject.serialize_value(enum)).to eq("::ParentClass::EnumName")
+    end
+
+    it 'serializes Strings' do
+      expect(subject.serialize_value(".string_val")).to eq("\".string_val\"")
+    end
+
+    it 'serializes Messages' do
+      pending 
+    end
+  end
 
 end

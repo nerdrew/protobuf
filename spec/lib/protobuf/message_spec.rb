@@ -601,7 +601,7 @@ RSpec.describe Protobuf::Message do
       end
 
       it 'has an accessor for foo' do
-        message = klass.new(foo: 'bar')
+        message = klass.new(:foo => 'bar')
         expect(message.foo).to eq('bar')
         expect(message[:foo]).to eq('bar')
       end
@@ -616,7 +616,7 @@ RSpec.describe Protobuf::Message do
       end
 
       it 'has an accessor for foo that refers to the base field' do
-        message = klass.new(foo: 'bar', '.boom.foo' => 'bam')
+        message = klass.new(:foo => 'bar', '.boom.foo' => 'bam')
         expect(message.foo).to eq('bar')
         expect(message[:foo]).to eq('bar')
         expect(message[:'.boom.foo']).to eq('bam')

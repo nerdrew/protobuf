@@ -12,7 +12,8 @@ module Protobuf
         super
         @output_file = ::Google::Protobuf::Compiler::CodeGeneratorResponse::File.new(:name => file_name)
         @extension_fields = Hash.new { |h, k| h[k] = [] }
-        @known_messages = []
+        @known_messages = {}
+        @known_enums = {}
         @dangling_messages = {}
       end
 
@@ -49,7 +50,7 @@ module Protobuf
 
       def unknown_extensions
         @unknown_extensions ||= @extension_fields.reject do |k, _|
-          @known_messages.include?(k)
+          @known_messages[k]
         end
       end
 
@@ -69,15 +70,25 @@ module Protobuf
         elsif !(namespace = namespaces.reject(&:empty?).join(".")).empty?
           fully_qualified_namespace = ".#{namespace}"
         end
-        # Record all the message descriptor name's we encounter (should be the whole tree).
-        if descriptor.is_a?(::Google::Protobuf::DescriptorProto)
+
+        # Record all the message descriptor names we encounter (should be the whole tree).
+        if descriptor.is_a?(::Google::Protobuf::EnumDescriptorProto)
           if fully_qualified_token?(descriptor.name)
-            @known_messages << descriptor.name
+            @known_enums[descriptor.name] = descriptor
           else
             fully_qualified_namespace = ".#{namespaces.join('.')}"
-            @known_messages << fully_qualified_namespace
+            @known_enums[fully_qualified_namespace] = descriptor
+          end
+        elsif descriptor.is_a?(::Google::Protobuf::DescriptorProto)
+          if fully_qualified_token?(descriptor.name)
+            @known_messages[descriptor.name] = descriptor
+          else
+            fully_qualified_namespace = ".#{namespaces.join('.')}"
+            @known_messages[fully_qualified_namespace] = descriptor
           end
         end
+
+        return if descriptor.is_a?(::Google::Protobuf::EnumDescriptorProto)
 
         descriptor.extension.each do |field_descriptor|
           unless fully_qualified_token?(field_descriptor.name) && fully_qualified_namespace
@@ -86,7 +97,7 @@ module Protobuf
           @extension_fields[field_descriptor.extendee] << field_descriptor
         end
 
-        [:message_type, :nested_type].each do |type|
+        [:message_type, :nested_type, :enum_type].each do |type|
           next unless descriptor.respond_to_has_and_present?(type)
 
           descriptor.public_send(type).each do |type_descriptor|
@@ -123,9 +134,44 @@ module Protobuf
 
       def print_package(&block)
         namespaces = descriptor.package.split('.')
+        if namespaces.empty? && ENV.key?('PB_DEFAULT_PACKAGE_NAME')
+          namespaces = File.basename(descriptor.name).sub('.proto', '')
+        end
         namespaces.reverse.reduce(block) do |previous, namespace|
           -> { print_module(namespace, &previous) }
         end.call
+      end
+
+      def eval_unknown_extensions!
+        @@evaled_dependencies ||= Set.new
+        @@all_messages ||= {}
+        @@all_enums ||= {}
+
+        map_extensions(descriptor, [descriptor.package])
+        @known_messages.each do |name, descriptor|
+          @@all_messages[name] = descriptor
+        end
+        @known_enums.each do |name, descriptor|
+          @@all_enums[name] = descriptor
+        end
+
+        # create package namespace
+        print_package {}
+        eval_code
+
+        unknown_extensions.each do |extendee, fields|
+          eval_dependencies(extendee)
+          fields.each do |field|
+            eval_dependencies(field.type_name)
+          end
+        end
+        group = GroupGenerator.new(0)
+        group.add_extended_messages(unknown_extensions)
+        print group.to_s
+        eval_code
+      rescue => e
+        warn "Error loading unknown extensions #{descriptor.name.inspect} error=#{e}"
+        raise e
       end
 
       private
@@ -136,6 +182,75 @@ module Protobuf
 
       def fully_qualified_token?(token)
         token[0] == '.'
+      end
+
+      def eval_dependencies(name, namespace = nil)
+        name = "#{namespace}.#{name}" if namespace && !fully_qualified_token?(name)
+        return if name.empty? || @@evaled_dependencies.include?(name) || modulize(name).safe_constantize
+
+        # if name = .foo.bar.Baz look for classes / modules named ::Foo::Bar and ::Foo
+        # module == pure namespace (e.g. the descriptor package name)
+        # class == nested messages
+        create_ruby_namespace_heiarchy(name)
+
+        if (message = @@all_messages[name])
+          # Create the blank namespace in case there are nested types
+          eval_message_code(name)
+
+          message.nested_type.each do |nested_type|
+            eval_dependencies(nested_type.name, name) unless nested_type.name.empty?
+          end
+          message.field.each do |field|
+            eval_dependencies(field.type_name, name) unless field.type_name.empty?
+          end
+          message.enum_type.each do |enum_type|
+            eval_dependencies(enum_type.name, name)
+          end
+
+          # Check @@evaled_dependencies again in case there was a dependency
+          # loop that already loaded this message
+          return if @@evaled_dependencies.include?(name)
+          eval_message_code(name, message.field)
+          @@evaled_dependencies << name
+
+        elsif (enum = @@all_enums[name])
+          # Check @@evaled_dependencies again in case there was a dependency
+          # loop that already loaded this enum
+          return if @@evaled_dependencies.include?(name)
+          namespace = name.split(".")
+          eval_enum_code(enum, namespace[0..-2].join("."))
+          @@evaled_dependencies << name
+        else
+          fail "Error loading unknown dependencies, could not find message or enum #{name.inspect}"
+        end
+      end
+
+      def eval_message_code(fully_qualified_namespace, fields = [])
+        group = GroupGenerator.new(0)
+        group.add_extended_messages(fully_qualified_namespace => fields)
+        print group.to_s
+        eval_code
+      end
+
+      def eval_enum_code(enum, fully_qualified_namespace)
+        group = GroupGenerator.new(0)
+        group.add_enums([enum], :namespace => [fully_qualified_namespace])
+        print group.to_s
+        eval_code(modulize(fully_qualified_namespace).safe_constantize || Object)
+      end
+
+      def eval_code(context = Object)
+        warn "#{context.inspect}.module_eval #{print_contents.inspect}" if ENV['PB_DEBUG']
+        context.module_eval print_contents.to_s
+        @io.truncate(0)
+        @io.rewind
+      end
+
+      def create_ruby_namespace_heiarchy(name)
+        i = name.size
+        while (i = name[0...i].rindex(".")) && i > 0
+          eval_dependencies(name[0...i])
+        end
       end
 
     end
