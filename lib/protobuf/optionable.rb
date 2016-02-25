@@ -17,6 +17,10 @@ module Protobuf
         end
       end
 
+      def get_option!(name)
+        get_option(name) if @_optionable_options.try(:key?, name)
+      end
+
       def set_option(name, value = true)
         @_optionable_options ||= {}
         @_optionable_options[name.to_s] = value
