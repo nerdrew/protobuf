@@ -72,7 +72,7 @@ module Protobuf
             next if field.default_value == inner_value #&& !(field.type_class < Enum)
             serialized_inner_value = serialize_value(inner_value)
             # TODO: handle "empty" serialized_inner_value
-            "#{field.name.inspect} => #{serialized_inner_value}"
+            "#{field.fully_qualified_name.inspect} => #{serialized_inner_value}"
           end.compact
           "{ #{fields.join(', ')} }"
         when Enum

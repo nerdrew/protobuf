@@ -55,8 +55,10 @@ RSpec.describe ::Protobuf::CodeGenerator do
 
     it 'evals files as they are generated' do
       described_class.new(request_bytes).eval_unknown_extensions!
-      expect(Google::Protobuf::FieldOptions.extension_fields.map(&:name)).to include(:'.test.pkg.code_generator_spec.boom')
-      added_extension = Google::Protobuf::FieldOptions.extension_fields.detect { |f| f.name == :'.test.pkg.code_generator_spec.boom' }
+      expect(Google::Protobuf::FieldOptions.extension_fields.map(&:fully_qualified_name)).to include(:'.test.pkg.code_generator_spec.boom')
+      expect(Google::Protobuf::FieldOptions.extension_fields.map(&:name)).to include(:boom)
+      added_extension = Google::Protobuf::FieldOptions.extension_fields.detect { |f| f.fully_qualified_name == :'.test.pkg.code_generator_spec.boom' }
+      expect(added_extension.name).to eq(:boom)
       expect(added_extension.rule).to eq(:optional)
       expect(added_extension.type_class).to eq(::Protobuf::Field::StringField)
       expect(added_extension.tag).to eq(20100)
