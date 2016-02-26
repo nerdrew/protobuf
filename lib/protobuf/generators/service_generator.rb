@@ -28,7 +28,7 @@ module Protobuf
             next unless field_option.extension?
             default_option_value = method_descriptor.options[field_option.name]
             next if default_option_value == field_option.default_value
-            options[field_option.name] = serialize_value(default_option_value)
+            options[field_option.fully_qualified_name] = serialize_value(default_option_value)
           end
         end
 

@@ -8,7 +8,7 @@ module Protobuf
           descriptor.each_field.map do |field, value|
             next if field.default_value == value
             serialized_value = serialize_value(value)
-            puts "set_option #{field.name.inspect}, #{serialized_value}"
+            puts "set_option #{field.fully_qualified_name.inspect}, #{serialized_value}"
           end
         end
       end
