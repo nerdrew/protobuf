@@ -1,6 +1,6 @@
+require 'protobuf/deprecation'
 require 'protobuf/optionable'
 require 'protobuf/field'
-require 'protobuf/deprecation'
 require 'protobuf/enum'
 require 'protobuf/exceptions'
 require 'protobuf/message/fields'
@@ -237,3 +237,5 @@ module Protobuf
 
   end
 end
+
+require 'protobuf/descriptors'

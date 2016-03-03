@@ -1,5 +1,5 @@
 require 'active_support/core_ext/hash/slice'
-require 'protobuf/deprecation'
+require 'protobuf/message'
 require 'protobuf/field/field_array'
 require 'protobuf/logging'
 require 'protobuf/wire_type'

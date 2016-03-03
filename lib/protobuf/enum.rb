@@ -1,6 +1,5 @@
 require 'delegate'
-require 'protobuf/deprecation'
-require 'protobuf/optionable'
+require 'protobuf/message'
 
 ##
 # Adding extension to Numeric until

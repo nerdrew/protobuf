@@ -1,7 +1,5 @@
-require 'active_support/core_ext/class'
-
 require 'protobuf/logging'
-require 'protobuf/optionable'
+require 'protobuf/message'
 require 'protobuf/rpc/client'
 require 'protobuf/rpc/error'
 require 'protobuf/rpc/rpc_method'
