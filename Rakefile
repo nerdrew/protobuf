@@ -5,6 +5,7 @@ require 'fileutils'
 require 'rubygems'
 require 'rubygems/package_task'
 require 'bundler/gem_tasks'
+require 'rspec/core'
 require 'benchmark/tasks'
 
 require 'rspec/core/rake_task'
