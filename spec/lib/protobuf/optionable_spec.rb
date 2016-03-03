@@ -2,22 +2,66 @@ require 'spec_helper'
 require 'protobuf/optionable'
 
 RSpec.describe 'Optionable' do
-  describe '.{get,set}_option' do
+  describe '.{get,get!,set}_option' do
     before(:all) do
       OptionableGetOptionTest = ::Class.new(::Protobuf::Message) do
         set_option :deprecated, true
       end
     end
 
-    it 'retrieves the option for the given name, if any' do
+    it '.get_option retrieves the option as a symbol' do
       expect(OptionableGetOptionTest.get_option(:deprecated)).to be(true)
-      expect(OptionableGetOptionTest.get_option("deprecated")).to be(true)
+    end
+
+    it '.get_option returns the default value for unset options' do
+      expect(OptionableGetOptionTest.get_option(:message_set_wire_format)).to be(false)
+    end
+
+    it '.get_option retrieves the option as a string' do
+      expect(OptionableGetOptionTest.get_option('deprecated')).to be(true)
+    end
+
+    it '.get_option errors if the option does not exist' do
       expect { OptionableGetOptionTest.get_option(:baz) }.to raise_error(ArgumentError)
     end
 
-    it 'retrieves the option in the context of an instance' do
+    it '.get_option! retrieves explicitly an set option' do
+      expect(OptionableGetOptionTest.get_option!(:deprecated)).to be(true)
+    end
+
+    it '.get_option! returns nil for unset options' do
+      expect(OptionableGetOptionTest.get_option!(:message_set_wire_format)).to be(nil)
+    end
+
+    it '.get_option! errors if the option does not exist' do
+      expect { OptionableGetOptionTest.get_option(:baz) }.to raise_error(ArgumentError)
+    end
+
+    it '#get_option retrieves the option as a symbol' do
       expect(OptionableGetOptionTest.new.get_option(:deprecated)).to be(true)
-      expect(OptionableGetOptionTest.new.get_option("deprecated")).to be(true)
+    end
+
+    it '#get_option returns the default value for unset options' do
+      expect(OptionableGetOptionTest.new.get_option(:message_set_wire_format)).to be(false)
+    end
+
+    it '#get_option retrieves the option as a string' do
+      expect(OptionableGetOptionTest.new.get_option('deprecated')).to be(true)
+    end
+
+    it '#get_option errors if the option does not exist' do
+      expect { OptionableGetOptionTest.new.get_option(:baz) }.to raise_error(ArgumentError)
+    end
+
+    it '#get_option! retrieves explicitly an set option' do
+      expect(OptionableGetOptionTest.new.get_option!(:deprecated)).to be(true)
+    end
+
+    it '#get_option! returns nil for unset options' do
+      expect(OptionableGetOptionTest.new.get_option!(:message_set_wire_format)).to be(nil)
+    end
+
+    it '#get_option! errors if the option does not exist' do
       expect { OptionableGetOptionTest.new.get_option(:baz) }.to raise_error(ArgumentError)
     end
   end

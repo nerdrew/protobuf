@@ -17,6 +17,10 @@ module Protobuf
         end
       end
 
+      def get_option!(name)
+        get_option(name) if @_optionable_options.try(:key?, name.to_s)
+      end
+
       def set_option(name, value = true)
         @_optionable_options ||= {}
         @_optionable_options[name.to_s] = value
@@ -25,6 +29,10 @@ module Protobuf
 
     def get_option(name)
       self.class.get_option(name)
+    end
+
+    def get_option!(name)
+      self.class.get_option!(name)
     end
 
     def self.inject(base_class, extend_class = true, &block)
