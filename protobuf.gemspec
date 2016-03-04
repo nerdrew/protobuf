@@ -25,6 +25,7 @@ require "protobuf/version"
   s.add_dependency 'thread_safe'
 
   s.add_development_dependency 'ffi-rzmq'
+  s.add_development_dependency 'grpc'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec', '>= 3.0'
   s.add_development_dependency 'rubocop', '0.34.2'

@@ -37,7 +37,7 @@ module Protobuf
             group.add_message_declarations(descriptor.message_type)
             group.add_messages(descriptor.message_type, :extension_fields => @extension_fields, :namespace => [descriptor.package])
             group.add_extended_messages(unknown_extensions)
-            group.add_services(descriptor.service)
+            group.add_services(descriptor.service, :namespace => [descriptor.package])
 
             group.add_header(:enum, 'Enum Classes')
             group.add_header(:message_declaration, 'Message Classes')
@@ -113,6 +113,7 @@ module Protobuf
       def print_generic_requires
         print_require("protobuf/message")
         print_require("protobuf/rpc/service") if descriptor.service.count > 0
+        print_require("grpc") if descriptor.service.count > 0 && ENV.key?('PB_GRPC_SERVICES')
         puts
       end
 
@@ -217,13 +218,13 @@ module Protobuf
           eval_enum_code(enum, namespace[0..-2].join("."))
           @@evaled_dependencies << name
         else
-          raise "Error loading unknown dependencies, could not find message or enum #{name.inspect}"
+          fail "Error loading unknown dependencies, could not find message or enum #{name.inspect}"
         end
       end
 
       def eval_message_code(fully_qualified_namespace, fields = [])
         group = GroupGenerator.new(0)
-        group.add_extended_messages({fully_qualified_namespace => fields}, false)
+        group.add_extended_messages({ fully_qualified_namespace => fields }, false)
         print group.to_s
         eval_code
       end

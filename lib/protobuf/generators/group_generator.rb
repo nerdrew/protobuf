@@ -77,9 +77,9 @@ module Protobuf
         end
       end
 
-      def add_services(service_descriptors)
+      def add_services(service_descriptors, options = {})
         service_descriptors.each do |service_descriptor|
-          @groups[:service] << ServiceGenerator.new(service_descriptor, indent_level)
+          @groups[:service] << ServiceGenerator.new(service_descriptor, indent_level, options)
         end
       end
 
