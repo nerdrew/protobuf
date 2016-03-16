@@ -1,6 +1,5 @@
 require 'delegate'
-require 'protobuf/deprecation'
-require 'protobuf/optionable'
+require 'protobuf/message'
 
 ##
 # Adding extension to Numeric until
@@ -12,7 +11,7 @@ require 'protobuf/optionable'
 module Protobuf
   class Enum < SimpleDelegator
     # Public: Allows setting Options on the Enum class.
-    include ::Protobuf::Optionable
+    ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::EnumOptions }
 
     def self.aliases_allowed?
       get_option(:allow_alias)

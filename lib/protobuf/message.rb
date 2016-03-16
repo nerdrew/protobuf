@@ -1,9 +1,11 @@
-require 'protobuf/field'
 require 'protobuf/deprecation'
+require 'protobuf/optionable'
+require 'protobuf/field'
 require 'protobuf/enum'
 require 'protobuf/exceptions'
 require 'protobuf/message/fields'
 require 'protobuf/message/serialization'
+# Note: 'protobuf/descriptors' is required at the end of this file
 
 # Under MRI, this optimizes proto decoding by around 15% in tests.
 # When unavailable, we fall to pure Ruby.
@@ -25,6 +27,7 @@ module Protobuf
 
     extend ::Protobuf::Message::Fields
     include ::Protobuf::Message::Serialization
+    ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::MessageOptions }
 
     ##
     # Class Methods
@@ -238,3 +241,9 @@ module Protobuf
 
   end
 end
+
+# We want everything that requries protobuf/message to require the descriptors class,
+# because because Optionable classes need Google::Protobuf::Options to work.
+# But descriptors requires Protobuf::{Enum,Message,etc} to have been defined, hence
+# being at the end of this file.
+require 'protobuf/descriptors'
