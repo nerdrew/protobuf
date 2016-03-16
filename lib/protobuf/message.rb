@@ -1,5 +1,6 @@
-require 'protobuf/field'
 require 'protobuf/deprecation'
+require 'protobuf/optionable'
+require 'protobuf/field'
 require 'protobuf/enum'
 require 'protobuf/exceptions'
 require 'protobuf/message/fields'
@@ -25,6 +26,7 @@ module Protobuf
 
     extend ::Protobuf::Message::Fields
     include ::Protobuf::Message::Serialization
+    ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::MessageOptions }
 
     ##
     # Class Methods
@@ -238,3 +240,5 @@ module Protobuf
 
   end
 end
+
+require 'protobuf/descriptors'

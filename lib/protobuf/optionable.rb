@@ -1,17 +1,36 @@
-require 'active_support/concern'
-
 module Protobuf
   module Optionable
-    extend ::ActiveSupport::Concern
-
     module ClassMethods
       def get_option(name)
-        @_optionable_options.try(:[], name)
+        name = name.to_s
+        option = optionable_descriptor_class.get_field(name, true)
+        fail ArgumentError, "invalid option=#{name}" unless option
+        unless option.fully_qualified_name.to_s == name
+          # Eventually we'll deprecate the use of simple names of fields completely, but for now make sure people
+          # are accessing options correctly. We allow simple names in other places for backwards compatibility.
+          fail ArgumentError, "must access option using its fully qualified name: #{option.fully_qualified_name.inspect}"
+        end
+        if @_optionable_options.try(:key?, name)
+          value = @_optionable_options[name]
+        else
+          value = option.default_value
+        end
+        if option.type_class < ::Protobuf::Message
+          option.type_class.new(value)
+        else
+          value
+        end
       end
+
+      def get_option!(name)
+        get_option(name) if @_optionable_options.try(:key?, name.to_s)
+      end
+
+      private
 
       def set_option(name, value = true)
         @_optionable_options ||= {}
-        @_optionable_options[name] = value
+        @_optionable_options[name.to_s] = value
       end
     end
 
@@ -19,5 +38,22 @@ module Protobuf
       self.class.get_option(name)
     end
 
+    def get_option!(name)
+      self.class.get_option!(name)
+    end
+
+    def self.inject(base_class, extend_class = true, &block)
+      unless block_given?
+        fail ArgumentError, 'missing option class block (e.g: ::Google::Protobuf::MessageOptions)'
+      end
+      if extend_class
+        base_class.extend(ClassMethods)
+        base_class.__send__(:include, self)
+        base_class.define_singleton_method(:optionable_descriptor_class, block)
+      else
+        base_class.__send__(:include, ClassMethods)
+        base_class.module_eval { define_method(:optionable_descriptor_class, block) }
+      end
+    end
   end
 end
