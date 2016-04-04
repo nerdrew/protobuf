@@ -1,4 +1,5 @@
 require 'protobuf/message'
+require 'active_support/core_ext/hash/slice'
 require 'protobuf/field/field_array'
 require 'protobuf/logging'
 require 'protobuf/wire_type'
@@ -43,7 +44,10 @@ module Protobuf
         @rule          = rule
         @tag           = tag
         @type_class    = type_class
-        @options       = options
+        @options = options.slice(:ctype, :packed, :deprecated, :lazy, :jstype, :weak, :uninterpreted_option, :default, :extension)
+        options.each do |option_name, value|
+          set_option(option_name, value)
+        end
 
         validate_packed_field if packed?
         define_accessor(simple_name, fully_qualified_name) if simple_name
