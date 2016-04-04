@@ -7,6 +7,7 @@ require 'protobuf/message'
 
 module Google
   module Protobuf
+    ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
     ##
     # Message Classes
@@ -96,6 +97,17 @@ module Google
 
 
     ##
+    # File Options
+    #
+    set_option :java_package, "com.google.protobuf"
+    set_option :java_outer_classname, "DescriptorProtos"
+    set_option :optimize_for, ::Google::Protobuf::FileOptions::OptimizeMode::SPEED
+    set_option :go_package, "descriptor"
+    set_option :objc_class_prefix, "GPB"
+    set_option :csharp_namespace, "Google.Protobuf.Reflection"
+
+
+    ##
     # Message Fields
     #
     class FileDescriptorSet
@@ -149,6 +161,7 @@ module Google
       optional :string, :extendee, 2
       optional :string, :default_value, 7
       optional :int32, :oneof_index, 9
+      optional :string, :json_name, 10
       optional ::Google::Protobuf::FieldOptions, :options, 8
     end
 
@@ -281,6 +294,7 @@ module Google
 
       repeated ::Google::Protobuf::SourceCodeInfo::Location, :location, 1
     end
+
 
   end
 

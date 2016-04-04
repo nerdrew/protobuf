@@ -96,10 +96,6 @@ module Protobuf
         false
       end
 
-      def getter
-        name
-      end
-
       def message?
         false
       end
@@ -139,10 +135,6 @@ module Protobuf
         elsif wire_type == ::Protobuf::WireType::FIXED32
           array << stream.read(4) until stream.eof?
         end
-      end
-
-      def setter
-        @setter ||= "#{name}="
       end
 
       def tag_encoded
@@ -209,7 +201,6 @@ module Protobuf
           fail "Can't use packed encoding for '#{type_class}' type"
         end
       end
-
     end
   end
 end

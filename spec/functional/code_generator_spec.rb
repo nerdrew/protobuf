@@ -5,7 +5,7 @@ require 'protobuf/code_generator'
 
 RSpec.describe 'code generation' do
   it "generates code for google's unittest.proto" do
-    bytes = IO.read(PROTOS_PATH.join('google_unittest.bin'), mode: 'rb')
+    bytes = IO.read(PROTOS_PATH.join('google_unittest.bin'), :mode => 'rb')
 
     expected_files =
       ["google_unittest_import_public.pb.rb", "google_unittest_import.pb.rb", "google_unittest.pb.rb"]
@@ -28,7 +28,7 @@ RSpec.describe 'code generation' do
     expected_unittest_custom_options =
       File.open(PROTOS_PATH.join('google_unittest_custom_options.pb.rb'), "r:UTF-8", &:read)
 
-    bytes = IO.read(PROTOS_PATH.join('google_unittest_custom_options.bin'), mode: 'rb')
+    bytes = IO.read(PROTOS_PATH.join('google_unittest_custom_options.bin'), :mode => 'rb')
     code_generator = ::Protobuf::CodeGenerator.new(bytes)
     code_generator.eval_unknown_extensions!
     response = ::Google::Protobuf::Compiler::CodeGeneratorResponse.decode(code_generator.response_bytes)
