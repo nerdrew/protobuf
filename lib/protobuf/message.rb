@@ -55,7 +55,7 @@ module Protobuf
 
     def clear!
       @values.delete_if do |_, value|
-        if value.is_a?(::Protobuf::Field::FieldArray)
+        if value.is_a?(::Protobuf::Field::FieldArray) or value.is_a?(::Protobuf::Field::FieldHash)
           value.clear
           false
         else
@@ -90,6 +90,17 @@ module Protobuf
         if value.nil?
           fail ::Protobuf::SerializationError, "Required field #{self.class.name}##{field.name} does not have a value." if field.required?
           next
+        end
+        if field.map?
+          # on-the-wire, maps are represented like an array of entries where
+          # each entry is a message of two fields, key and value.
+          array = Array.new(value.size)
+          i = 0
+          value.each do | k, v |
+            array[i] = field.type_class.new({ :key => k, :value => v }) 
+            i += 1
+          end
+          value = array
         end
 
         yield(field, value)
@@ -156,7 +167,9 @@ module Protobuf
 
     def [](name)
       if (field = self.class.get_field(name, true))
-        if field.repeated?
+        if field.map?
+          @values[field.fully_qualified_name] ||= ::Protobuf::Field::FieldHash.new(field)
+        elsif field.repeated?
           @values[field.fully_qualified_name] ||= ::Protobuf::Field::FieldArray.new(field)
         elsif @values.key?(field.fully_qualified_name)
           @values[field.fully_qualified_name]
