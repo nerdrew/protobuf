@@ -183,7 +183,21 @@ module Protobuf
 
     def []=(name, value)
       if (field = self.class.get_field(name, true))
-        if field.repeated?
+        if field.map?
+          if not(value.is_a?(Hash))
+            fail TypeError, <<-TYPE_ERROR
+                Expected map value
+                Got '#{value.class}' for map protobuf field #{field.name}
+            TYPE_ERROR
+          end
+
+          if value.empty?
+            @values.delete(field.fully_qualified_name)
+          else
+            @values[field.fully_qualified_name] ||= ::Protobuf::Field::FieldHash.new(field)
+            @values[field.fully_qualified_name].replace(value)
+          end
+        elsif field.repeated?
           if value.is_a?(Array)
             value = value.compact
           else

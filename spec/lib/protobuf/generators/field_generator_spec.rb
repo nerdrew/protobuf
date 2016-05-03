@@ -25,39 +25,48 @@ RSpec.describe ::Protobuf::Generators::FieldGenerator do
       :options => field_options,
     }
   end
-
   let(:field) { ::Google::Protobuf::FieldDescriptorProto.new(field_fields) }
 
-  describe '#compile' do
-    subject { described_class.new(field).to_s }
+  let(:nested_types) { [] }
+  let(:owner_fields) do
+    {
+      :name => 'Baz',
+      :field => [ field ],
+      :nested_type => nested_types
+    }
+  end
+  let(:owner_msg) { ::Google::Protobuf::DescriptorProto.new(owner_fields) }
 
-    specify { expect(subject).to eq "optional :string, :foo_bar, 3\n" }
+  describe '#compile' do
+    subject { described_class.new(field, owner_msg, 1).to_s }
+
+    specify { expect(subject).to eq "  optional :string, :foo_bar, 3\n" }
 
     context 'when the type is another message' do
       let(:type_enum) { :TYPE_MESSAGE }
       let(:type_name) { '.foo.bar.Baz' }
 
-      specify { expect(subject).to eq "optional ::Foo::Bar::Baz, :foo_bar, 3\n" }
+      specify { expect(subject).to eq "  optional ::Foo::Bar::Baz, :foo_bar, 3\n" }
     end
 
     context 'when a default value is used' do
       let(:type_enum) { :TYPE_INT32 }
       let(:default_value) { '42' }
-      specify { expect(subject).to eq "optional :int32, :foo_bar, 3, :default => 42\n" }
+      specify { expect(subject).to eq "  optional :int32, :foo_bar, 3, :default => 42\n" }
 
       context 'when type is an enum' do
         let(:type_enum) { :TYPE_ENUM }
         let(:type_name) { '.foo.bar.Baz' }
         let(:default_value) { 'QUUX' }
 
-        specify { expect(subject).to eq "optional ::Foo::Bar::Baz, :foo_bar, 3, :default => ::Foo::Bar::Baz::QUUX\n" }
+        specify { expect(subject).to eq "  optional ::Foo::Bar::Baz, :foo_bar, 3, :default => ::Foo::Bar::Baz::QUUX\n" }
       end
 
       context 'when the type is a string' do
         let(:type_enum) { :TYPE_STRING }
         let(:default_value) { "a default \"string\"" }
 
-        specify { expect(subject).to eq "optional :string, :foo_bar, 3, :default => \"a default \"string\"\"\n" }
+        specify { expect(subject).to eq "  optional :string, :foo_bar, 3, :default => \"a default \"string\"\"\n" }
       end
 
       context 'when float or double field type' do
@@ -83,19 +92,54 @@ RSpec.describe ::Protobuf::Generators::FieldGenerator do
     context 'when the field is an extension' do
       let(:extendee) { 'foo.bar.Baz' }
 
-      specify { expect(subject).to eq "optional :string, :foo_bar, 3, :extension => true\n" }
+      specify { expect(subject).to eq "  optional :string, :foo_bar, 3, :extension => true\n" }
     end
 
     context 'when field is packed' do
       let(:field_options) { { :packed => true } }
 
-      specify { expect(subject).to eq "optional :string, :foo_bar, 3, :packed => true\n" }
+      specify { expect(subject).to eq "  optional :string, :foo_bar, 3, :packed => true\n" }
+    end
+
+    context 'when field is a map' do
+      let(:type_enum) { :TYPE_MESSAGE }
+      let(:type_name) { '.foo.bar.Baz.FooBarEntry' }
+      let(:label_enum) { :LABEL_REPEATED }
+      let(:nested_types) do 
+        [ ::Google::Protobuf::DescriptorProto.new(
+          {
+            :name => 'FooBarEntry',
+            :field => [
+              ::Google::Protobuf::FieldDescriptorProto.new(
+                {
+                  :label => :LABEL_OPTIONAL,
+                  :name => 'key',
+                  :number => 1,
+                  :type => :TYPE_STRING,
+                  :type_name => nil
+                }),
+              ::Google::Protobuf::FieldDescriptorProto.new(
+                {
+                  :label => :LABEL_OPTIONAL,
+                  :name => 'value',
+                  :number => 2,
+                  :type => :TYPE_ENUM,
+                  :type_name => '.foo.bar.SnafuState'
+                })
+              ],
+            :options => ::Google::Protobuf::MessageOptions.new({ :map_entry => true })
+          })
+      ] 
+      end
+      let(:field_options) { { :map_entry => true } }
+
+      specify { expect(subject).to eq "  map :string, ::Foo::Bar::SnafuState, :foo_bar, 3\n" }
     end
 
     context 'when field is deprecated' do
       let(:field_options) { { :deprecated => true } }
 
-      specify { expect(subject).to eq "optional :string, :foo_bar, 3, :deprecated => true\n" }
+      specify { expect(subject).to eq "  optional :string, :foo_bar, 3, :deprecated => true\n" }
     end
 
     context 'when field uses a custom option that is an extension' do
