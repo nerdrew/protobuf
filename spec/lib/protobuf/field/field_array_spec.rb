@@ -2,21 +2,17 @@ require 'spec_helper'
 
 RSpec.describe Protobuf::Field::FieldArray do
 
-  class SomeBasicMessage < ::Protobuf::Message
+  class FieldArrayBasicMessage < ::Protobuf::Message
     optional :string, :field, 1
   end
 
-  class MoreComplexMessage < SomeBasicMessage
-  end
-
-  class OtherBasicMessage < ::Protobuf::Message
-    optional :string, :other_field, 1
+  class FieldArrayMoreComplexMessage < FieldArrayBasicMessage
   end
 
   class SomeRepeatMessage < ::Protobuf::Message
     optional :string, :some_string, 1
     repeated :string, :multiple_strings, 2
-    repeated SomeBasicMessage, :multiple_basic_msgs, 3
+    repeated FieldArrayBasicMessage, :multiple_basic_msgs, 3
   end
 
   let(:instance) { SomeRepeatMessage.new }
@@ -40,17 +36,17 @@ RSpec.describe Protobuf::Field::FieldArray do
       context 'when applied to a MessageField field array' do
         it 'adds a MessageField object' do
           expect(instance.multiple_basic_msgs).to be_empty
-          basic_msg1 = SomeBasicMessage.new
+          basic_msg1 = FieldArrayBasicMessage.new
           instance.multiple_basic_msgs.send(method, basic_msg1)
           expect(instance.multiple_basic_msgs).to eq([basic_msg1])
-          basic_msg2 = SomeBasicMessage.new
+          basic_msg2 = FieldArrayBasicMessage.new
           instance.multiple_basic_msgs.send(method, basic_msg2)
           expect(instance.multiple_basic_msgs).to eq([basic_msg1, basic_msg2])
         end
 
         it 'adds a Hash from a MessageField object' do
           expect(instance.multiple_basic_msgs).to be_empty
-          basic_msg1 = SomeBasicMessage.new
+          basic_msg1 = FieldArrayBasicMessage.new
           basic_msg1.field = 'my value'
           instance.multiple_basic_msgs.send(method, basic_msg1.to_hash)
           expect(instance.multiple_basic_msgs).to eq([basic_msg1])
@@ -58,10 +54,10 @@ RSpec.describe Protobuf::Field::FieldArray do
 
         it 'does not downcast a MessageField' do
           expect(instance.multiple_basic_msgs).to be_empty
-          basic_msg1 = MoreComplexMessage.new
+          basic_msg1 = FieldArrayMoreComplexMessage.new
           instance.multiple_basic_msgs.send(method, basic_msg1)
           expect(instance.multiple_basic_msgs).to eq([basic_msg1])
-          expect(instance.multiple_basic_msgs.first).to be_a(MoreComplexMessage)
+          expect(instance.multiple_basic_msgs.first).to be_a(FieldArrayMoreComplexMessage)
         end
       end
     end
