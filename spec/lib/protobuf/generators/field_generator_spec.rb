@@ -131,7 +131,6 @@ RSpec.describe ::Protobuf::Generators::FieldGenerator do
           })
       ] 
       end
-      let(:field_options) { { :map_entry => true } }
 
       specify { expect(subject).to eq "  map :string, ::Foo::Bar::SnafuState, :foo_bar, 3\n" }
     end

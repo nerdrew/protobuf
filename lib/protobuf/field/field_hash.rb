@@ -47,7 +47,7 @@ module Protobuf
       end
 
       # Return a hash-representation of the given values for this field type.
-      # The value in this case would be an array.
+      # The value in this case would be the hash itself.
       def to_hash_value
         self
       end
