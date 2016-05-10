@@ -174,6 +174,7 @@ module Protobuf
       end
 
       def determine_map_entry
+        return nil if @enclosing_msg_descriptor.nil?
         return nil unless descriptor.label.name == :LABEL_REPEATED and descriptor.type.name == :TYPE_MESSAGE
         # find nested message type
         name_parts = descriptor.type_name.split(".")

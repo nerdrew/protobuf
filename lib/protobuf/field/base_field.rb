@@ -138,11 +138,19 @@ module Protobuf
         if map?
           hash = message_instance[name]
           entry = decode(bytes)
-          hash[entry.key] = entry.value
+          # decoded value could be nil for an
+          # enum value that is not recognized
+          hash[entry.key] = entry.value if not(entry.value.nil?)
           return
         end
 
-        return message_instance[name] << decode(bytes) unless packed?
+        if not(packed?)
+          val = decode(bytes)
+          # decoded value could be nil for an
+          # enum value that is not recognized
+          message_instance[name] << val if not(val.nil?)
+          return
+        end
 
         array = message_instance[name]
         stream = StringIO.new(bytes)
