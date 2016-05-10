@@ -21,21 +21,51 @@ module Protobuf
       #
 
       def []=(nth, val)
-        super(nth, normalize(val)) unless val.nil?
+        if nth < 0 || nth > size
+          fail IndexError, "Index #{nth} is outside valid range 0...#{size}"
+        end
+        super(nth, normalize(val))
       end
 
       def <<(val)
-        super(normalize(val)) unless val.nil?
+        super(normalize(val))
       end
 
-      def push(val)
-        super(normalize(val)) unless val.nil?
+      alias_method :push, :<<
+
+      def unshift(val)
+        super(normalize(val))
       end
 
       def replace(val)
         raise_type_error(val) unless val.is_a?(Array)
-        val.map! { |v| normalize(v) }
-        super(val)
+        super(val.map { |v| normalize(v) })
+      end
+
+      def map!(&block)
+        if block_given?
+          new_ary = map(&block)
+          replace(new_ary)
+        else
+          super()
+        end
+      end
+
+      def fill(*args, &block)
+        new_ary = Array.new(self).fill(*args, &block)
+        replace(new_ary)
+      end
+
+      def concat(other)
+        ary = FieldArray.new(field)
+        ary.replace(other)
+        super(ary)
+      end
+
+      def insert(index, *objs)
+        ary = FieldArray.new(field)
+        ary.replace(objs)
+        super(index, *ary)
       end
 
       # Return a hash-representation of the given values for this field type.
@@ -50,10 +80,6 @@ module Protobuf
         "[#{field.name}]"
       end
 
-      def unshift(val)
-        super(normalize(val)) unless val.nil?
-      end
-
       private
 
       ##
@@ -61,11 +87,14 @@ module Protobuf
       #
 
       def normalize(value)
+        if value.nil?
+          raise_type_error(value)
+        end
         value = value.to_proto if value.respond_to?(:to_proto)
         fail TypeError, "Unacceptable value #{value} for field #{field.name} of type #{field.type_class}" unless field.acceptable?(value)
 
         if field.is_a?(::Protobuf::Field::EnumField)
-          field.type_class.fetch(value)
+          fetch_enum(field.type_class, value)
         elsif field.is_a?(::Protobuf::Field::MessageField) && value.is_a?(field.type_class)
           value
         elsif field.is_a?(::Protobuf::Field::MessageField) && value.respond_to?(:to_hash)
@@ -73,6 +102,12 @@ module Protobuf
         else
           value
         end
+      end
+
+      def fetch_enum(type, val)
+        en = type.fetch(val)
+        raise_type_error(val) if en.nil?
+        en
       end
 
       def raise_type_error(val)

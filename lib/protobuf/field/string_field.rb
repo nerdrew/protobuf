@@ -14,6 +14,10 @@ module Protobuf
       # Public Instance Methods
       #
 
+      def acceptable?(val)
+        val.is_a?(String) || val.is_a?(Symbol)
+      end
+
       def decode(bytes)
         bytes_to_decode = bytes.dup
         bytes_to_decode.force_encoding(::Protobuf::Field::StringField::ENCODING)
@@ -21,7 +25,11 @@ module Protobuf
       end
 
       def encode(value)
-        value_to_encode = value.dup
+        if value.is_a?(Symbol)
+          value_to_encode = value.to_s
+        else
+          value_to_encode = value.dup
+        end
         value_to_encode.encode!(::Protobuf::Field::StringField::ENCODING, :invalid => :replace, :undef => :replace, :replace => "")
         value_to_encode.force_encoding(::Protobuf::Field::BytesField::BYTES_ENCODING)
 

@@ -144,8 +144,9 @@ module Protobuf
 
         return message_instance[name] << decode(bytes) unless packed?
 
-        stream = StringIO.new(bytes)
         array = message_instance[name]
+        stream = StringIO.new(bytes)
+
         if wire_type == ::Protobuf::WireType::VARINT
           array << Varint.decode(stream) until stream.eof?
         elsif wire_type == ::Protobuf::WireType::FIXED64

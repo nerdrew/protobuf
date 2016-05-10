@@ -35,6 +35,8 @@ module Protobuf
       def encode(value)
         if value.is_a?(::Protobuf::Message)
           value_to_encode = value.encode
+        elsif value.is_a?(Symbol)
+          value_to_encode = value.to_s
         else
           value_to_encode = value.dup
         end

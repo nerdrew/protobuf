@@ -23,12 +23,10 @@ module Protobuf
       #
 
       def []=(key, val)
-        super(normalize_key(key), normalize_val(val)) unless val.nil?
+        super(normalize_key(key), normalize_val(val))
       end
 
-      def store(key, val)
-        super(normalize_key(key), normalize_val(val)) unless val.nil?
-      end
+      alias_method :store, :[]=
 
       def replace(val)
         raise_type_error(val) unless val.is_a?(Hash)
@@ -38,13 +36,11 @@ module Protobuf
 
       def merge!(other)
         raise_type_error(other) unless other.is_a?(Hash)
-        other.each { |k, v| self[normalize_key(k)] = normalize_val(v) }
+        # keys and values will be normalized by []= above
+        other.each { |k, v| self[k] = v }
       end
 
-      def update(other)
-        raise_type_error(other) unless other.is_a?(Hash)
-        other.each { |k, v| self[normalize_key(k)] = normalize_val(v) }
-      end
+      alias_method :update, :merge!
 
       # Return a hash-representation of the given values for this field type.
       # The value in this case would be the hash itself.
@@ -71,11 +67,14 @@ module Protobuf
       end
 
       def normalize(what, value, normalize_field)
+        if value.nil?
+          raise_type_error(value)
+        end
         value = value.to_proto if value.respond_to?(:to_proto)
         fail TypeError, "Unacceptable #{what} #{value} for field #{field.name} of type #{normalize_field.type_class}" unless normalize_field.acceptable?(value)
 
         if normalize_field.is_a?(::Protobuf::Field::EnumField)
-          normalize_field.type_class.fetch(value)
+          fetch_enum(normalize_field.type_class, value)
         elsif normalize_field.is_a?(::Protobuf::Field::MessageField) && value.is_a?(normalize_field.type_class)
           value
         elsif normalize_field.is_a?(::Protobuf::Field::MessageField) && value.respond_to?(:to_hash)
@@ -83,6 +82,12 @@ module Protobuf
         else
           value
         end
+      end
+
+      def fetch_enum(type, val)
+        en = type.fetch(val)
+        raise_type_error(val) if en.nil?
+        en
       end
 
       def raise_type_error(val)
