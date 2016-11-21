@@ -19,7 +19,8 @@ require "protobuf/version"
   s.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency 'activesupport', '>= 3.2'
+  # Hack, as Rails 5 requires Ruby version >= 2.2.2.
+  s.add_dependency "activesupport", '>= 3.2', "< 5" if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.2.2")
   s.add_dependency 'middleware'
   s.add_dependency 'thor'
   s.add_dependency 'thread_safe'
